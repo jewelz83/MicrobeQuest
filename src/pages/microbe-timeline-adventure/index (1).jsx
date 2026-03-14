@@ -481,14 +481,8 @@ const MicrobeTimelineAdventure = () => {
   // Handle era selection
   const handleEraSelect = (eraId) => {
     if (unlockedEras?.includes(eraId)) {
-      // STEP 2: Add click test
-      console.log(`Era ${getEraNumber(eraId)} clicked`);
-      alert(`You clicked Era ${getEraNumber(eraId)}!`);
-      
-      // STEP 3: Simple navigation
       setSelectedEra(eraId);
       setShowTimeline(false);
-      // Guide visibility is now managed by the hook, no manual setting needed
     }
   };
 
@@ -596,139 +590,237 @@ const MicrobeTimelineAdventure = () => {
     return icons?.[eraId] || 'Circle';
   };
 
-  // If timeline is hidden, show era content
+  // If timeline is hidden, show era content with real events
   if (!showTimeline) {
+    const eraCompletedCount = currentEra?.keyEvents?.filter(e => completedEvents?.includes(e?.id))?.length || 0;
+    const eraTotalPoints = currentEra?.keyEvents?.reduce((sum, e) => sum + (e?.points || 0), 0);
+
     return (
       <div className="min-h-screen bg-background overflow-hidden">
         <Header />
-        
-        <main className="pt-20 pb-8 relative">
+
+        <main className="pt-20 pb-32 relative">
           {/* Era Background */}
           <EraBackground era={currentEra} />
-          
+
           <div className="container mx-auto px-4 lg:px-6 relative z-10">
-            {/* Back to Timeline Button */}
-            <div className="mb-8 animate-slide-up">
+
+            {/* Back + Era Header */}
+            <div className="mb-6 animate-slide-up flex items-center justify-between flex-wrap gap-4">
               <Button
                 onClick={handleBackToTimeline}
                 variant="outline"
                 iconName="ArrowLeft"
-                className="mb-6"
               >
                 Back to Timeline
               </Button>
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br from-${currentEra?.color}-500 to-${currentEra?.color}-600 flex items-center justify-center`}>
+                  <Icon name={getEraIcon(currentEra?.id)} size={20} className="text-white" strokeWidth={2} />
+                </div>
+                <div>
+                  <h2 className={`font-heading text-lg text-${currentEra?.color}-600`}>{currentEra?.name}</h2>
+                  <p className="font-mono text-xs text-muted-foreground">{currentEra?.period}</p>
+                </div>
+              </div>
             </div>
 
-            {/* Era Welcome Content */}
-            <section className="text-center mb-12 animate-slide-up">
-              <div className="bg-card/90 backdrop-blur-sm border border-border rounded-2xl p-12 shadow-pronounced max-w-4xl mx-auto">
-                <div className={`w-24 h-24 mx-auto mb-6 rounded-full bg-gradient-to-br from-${currentEra?.color}-500 to-${currentEra?.color}-600 flex items-center justify-center`}>
-                  <Icon 
-                    name={getEraIcon(currentEra?.id)} 
-                    size={48} 
-                    className="text-white" 
-                    strokeWidth={2} 
+            {/* Era Progress Bar */}
+            <section className="mb-8 animate-slide-up">
+              <div className="bg-card/90 backdrop-blur-sm border border-border rounded-xl p-4 shadow-moderate">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-caption text-sm text-muted-foreground">Era Progress</span>
+                  <span className="font-mono text-sm text-foreground font-semibold">
+                    {eraCompletedCount} / {currentEra?.keyEvents?.length} discoveries
+                  </span>
+                </div>
+                <div className="w-full bg-border rounded-full h-2 mb-3">
+                  <div
+                    className={`h-full bg-gradient-to-r from-${currentEra?.color}-500 to-${currentEra?.color}-400 rounded-full transition-all duration-moderate`}
+                    style={{ width: `${(eraCompletedCount / currentEra?.keyEvents?.length) * 100}%` }}
                   />
                 </div>
-                
-                <h1 className="text-5xl lg:text-6xl font-heading text-foreground mb-4">
-                  Welcome to Era {getEraNumber(selectedEra)}!
-                </h1>
-                
-                <h2 className={`text-3xl font-heading mb-4 text-${currentEra?.color}-600`}>
-                  {currentEra?.name}
-                </h2>
-                
-                <p className="font-body text-xl text-muted-foreground mb-6 leading-relaxed">
-                  {currentEra?.subtitle}
-                </p>
-                
-                <div className="flex items-center justify-center space-x-6 text-lg mb-8">
-                  <div className="flex items-center space-x-2">
-                    <Icon name="Calendar" size={20} className="text-muted-foreground" />
-                    <span className="font-mono text-foreground">{currentEra?.period}</span>
-                  </div>
-                  <div className="w-2 h-2 bg-muted-foreground rounded-full" />
-                  <div className="flex items-center space-x-2">
-                    <Icon name="MapPin" size={20} className="text-muted-foreground" />
-                    <span className="font-body text-foreground">{currentEra?.theme}</span>
-                  </div>
-                </div>
-
-                {/* Era Stats */}
-                <div className="grid grid-cols-3 gap-6 max-w-md mx-auto">
-                  <div className="text-center">
-                    <div className={`text-2xl font-heading text-${currentEra?.color}-600 mb-1`}>
-                      {currentEra?.keyEvents?.length}
-                    </div>
-                    <div className="font-caption text-sm text-muted-foreground">
-                      Discoveries
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-2xl font-heading text-${currentEra?.color}-600 mb-1`}>
-                      {currentEra?.keyEvents?.filter(e => e?.unlocked)?.length}
-                    </div>
-                    <div className="font-caption text-sm text-muted-foreground">
-                      Unlocked
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <div className={`text-2xl font-heading text-${currentEra?.color}-600 mb-1`}>
-                      {currentEra?.keyEvents?.reduce((sum, event) => sum + (event?.points || 0), 0)}
-                    </div>
-                    <div className="font-caption text-sm text-muted-foreground">
-                      Total Points
-                    </div>
-                  </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span className="flex items-center space-x-1">
+                    <Icon name="Star" size={12} className="text-primary" />
+                    <span className="font-mono">{totalPoints} pts earned</span>
+                  </span>
+                  <span className="flex items-center space-x-1">
+                    <Icon name="Trophy" size={12} className="text-accent" />
+                    <span className="font-mono">{eraTotalPoints} pts available</span>
+                  </span>
                 </div>
               </div>
             </section>
 
-            {/* Coming Soon Message */}
-            <section className="text-center animate-slide-up" style={{ animationDelay: '200ms' }}>
-              <div className="bg-primary/10 border border-primary/20 rounded-xl p-8 max-w-2xl mx-auto">
-                <Icon name="Construction" size={48} className="text-primary mx-auto mb-4" />
-                <h3 className="font-heading text-xl text-foreground mb-3">
-                  Era Content Coming Soon!
-                </h3>
-                <p className="font-body text-muted-foreground mb-6">
-                  We're building an amazing interactive experience for {currentEra?.name}. 
-                  Stay tuned for timeline events, mini-games, and scientist discoveries!
-                </p>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <Button
-                    onClick={handleBackToTimeline}
-                    variant="primary"
-                    iconName="ArrowLeft"
-                  >
-                    Back to Timeline
-                  </Button>
-                  <Button
-                    variant="outline"
-                    iconName="Star"
-                    onClick={() => handleShowFunFact(
-                      `Did you know? ${currentEra?.keyEvents?.[0]?.fact || 'This era contains amazing discoveries!'}`
-                    )}
-                  >
-                    Era Fun Fact
-                  </Button>
-                </div>
+            {/* Events Grid */}
+            <section className="mb-10">
+              <h3 className="font-heading text-xl text-foreground mb-4">
+                Discoveries in this Era
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {currentEra?.keyEvents?.map((event, index) => {
+                  const isUnlocked = unlockedEvents?.includes(event?.id);
+                  const isCompleted = completedEvents?.includes(event?.id);
+
+                  return (
+                    <div
+                      key={event?.id}
+                      className={`
+                        bg-card border-2 rounded-xl p-6 shadow-moderate transition-all duration-fast
+                        animate-slide-up
+                        ${isUnlocked
+                          ? 'border-border hover:border-primary/30 hover:shadow-pronounced cursor-pointer'
+                          : 'border-border opacity-50 cursor-not-allowed'
+                        }
+                        ${isCompleted ? 'ring-2 ring-success bg-success/5' : ''}
+                      `}
+                      style={{ animationDelay: `${index * 100}ms` }}
+                      onClick={() => isUnlocked && !isCompleted && handleMinigameLaunch(event?.minigame, event)}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3">
+                          <div className={`
+                            w-12 h-12 rounded-full flex items-center justify-center text-white font-heading font-bold text-xs
+                            bg-gradient-to-br from-${currentEra?.color}-500 to-${currentEra?.color}-600 flex-shrink-0
+                          `}>
+                            {event?.year}
+                          </div>
+                          <div>
+                            <h3 className="font-heading text-lg text-foreground leading-tight">{event?.title}</h3>
+                            <p className="font-caption text-sm text-primary">{event?.scientist}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-2 flex-shrink-0">
+                          {isCompleted && (
+                            <Icon name="CheckCircle" size={20} className="text-success" />
+                          )}
+                          {isUnlocked && !isCompleted ? (
+                            <div className="bg-primary/10 text-primary rounded-full p-1">
+                              <Icon name="Play" size={18} />
+                            </div>
+                          ) : !isCompleted ? (
+                            <Icon name="Lock" size={20} className="text-muted-foreground" />
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <p className="font-body text-sm text-muted-foreground mb-4 leading-relaxed">
+                        {event?.description}
+                      </p>
+
+                      <div className="flex items-center justify-between">
+                        <button
+                          onClick={(e) => {
+                            e?.stopPropagation();
+                            handleShowFunFact(event?.fact);
+                          }}
+                          className="flex items-center space-x-2 text-accent hover:text-accent/80 transition-colors duration-fast"
+                        >
+                          <Icon name="Info" size={16} strokeWidth={2} />
+                          <span className="font-caption text-sm">Fun Fact</span>
+                        </button>
+
+                        <div className="flex items-center space-x-2">
+                          {isCompleted && (
+                            <span className="font-caption text-xs text-success bg-success/10 px-2 py-1 rounded-full">
+                              Completed!
+                            </span>
+                          )}
+                          <div className="flex items-center space-x-1 text-primary">
+                            <Icon name="Star" size={16} strokeWidth={2} />
+                            <span className="font-mono text-sm font-medium">{event?.points} pts</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {!isUnlocked && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <p className="font-caption text-xs text-muted-foreground text-center">
+                            Complete previous events to unlock
+                          </p>
+                        </div>
+                      )}
+
+                      {isCompleted && (
+                        <div className="mt-3 pt-3 border-t border-success/20">
+                          <button
+                            onClick={(e) => {
+                              e?.stopPropagation();
+                              handleMinigameLaunch(event?.minigame, event);
+                            }}
+                            className="w-full text-center font-caption text-xs text-muted-foreground hover:text-primary transition-colors"
+                          >
+                            Play again for fun →
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </section>
+
+            {/* Era complete message */}
+            {eraCompletedCount === currentEra?.keyEvents?.length && (
+              <section className="text-center animate-slide-up mb-8">
+                <div className="bg-success/10 border border-success/30 rounded-xl p-6 max-w-xl mx-auto">
+                  <Icon name="Trophy" size={40} className="text-success mx-auto mb-3" />
+                  <h3 className="font-heading text-xl text-foreground mb-2">Era Complete! 🎉</h3>
+                  <p className="font-body text-muted-foreground mb-4">
+                    Amazing work! You've completed all discoveries in {currentEra?.name}.
+                    Head back to the timeline to explore the next era!
+                  </p>
+                  <Button onClick={handleBackToTimeline} variant="primary" iconName="ArrowRight">
+                    Continue to Next Era
+                  </Button>
+                </div>
+              </section>
+            )}
+
+            {/* Action Buttons */}
+            <section className="flex flex-wrap items-center justify-center gap-4">
+              <Button
+                variant="secondary"
+                onClick={() => setShowToolEvolution(true)}
+                iconName="Microscope"
+              >
+                Tool Evolution
+              </Button>
+              <Link to="/progress-achievement-hub">
+                <Button variant="outline" iconName="Trophy">
+                  View Progress
+                </Button>
+              </Link>
+              <Link to="/game-home-dashboard">
+                <Button variant="ghost" iconName="Home">
+                  Back to Dashboard
+                </Button>
+              </Link>
+            </section>
+
           </div>
         </main>
+
+        {/* Timeline Navigation Bar */}
+        <TimelineBar
+          eras={Object?.values(timelineEras)}
+          selectedEra={selectedEra}
+          unlockedEras={unlockedEras}
+          onEraSelect={handleEraSelect}
+        />
 
         {/* Character Guide */}
         <CharacterGuide
           character="aunt-juju"
-          message={`Great choice! You're now exploring ${currentEra?.name}. This era spans ${currentEra?.period} and includes ${currentEra?.keyEvents?.length} major discoveries. Click 'Back to Timeline' when you're ready to explore other eras!`}
+          message={getCharacterMessage(selectedEra)}
           emotion="excited"
           position="bottom-right"
           isVisible={shouldShowGuide}
           onClose={hideGuide}
           showHint={true}
-          hintText="Full era content is coming soon! For now, explore different eras from the timeline."
+          hintText="Click on any unlocked event card to start a mini-game and earn points!"
         />
 
         {/* Fun Fact Modal */}
@@ -741,6 +833,37 @@ const MicrobeTimelineAdventure = () => {
           microbe={null}
           onViewDetails={() => {}}
         />
+
+        {/* Active Minigame */}
+        {activeMinigame && (
+          <MiniGame
+            id={activeMinigame?.id}
+            eventData={activeMinigame?.eventData}
+            onComplete={activeMinigame?.onComplete}
+            onClose={activeMinigame?.onClose}
+          />
+        )}
+
+        {/* Tool Evolution Modal */}
+        <ToolEvolution
+          isOpen={showToolEvolution}
+          onClose={() => setShowToolEvolution(false)}
+          currentEra={selectedEra}
+        />
+
+        {/* Progress Display */}
+        <div className="fixed top-24 right-4 z-30">
+          <div className="bg-card border border-border rounded-lg p-3 shadow-moderate">
+            <div className="flex items-center space-x-2 mb-2">
+              <Icon name="Star" size={16} className="text-primary" />
+              <span className="font-mono text-sm font-semibold text-foreground">{totalPoints}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Icon name="Collection" size={16} className="text-secondary" />
+              <span className="font-mono text-sm text-foreground">{collectedCards?.length}/10</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
